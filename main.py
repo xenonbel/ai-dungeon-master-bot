@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from dotenv import load_dotenv
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.enums import ParseMode
@@ -51,11 +51,15 @@ async def start_handler(message: Message) -> None:
                         "_Например: «Создай эльфа-мага с небольшой предисторией и распиши его характеристики»._")
     parse_mode=ParseMode.MARKDOWN_V2
 
-@dp.message()
+@dp.message(F.text)
 async def dnd_handler(message: Message) -> None:
     user_input = message.text
     ai_response = generate_content(user_input)
     await message.answer(ai_response)
+
+@dp.message()
+async def media_handler(message: Message) -> None:
+    await message.answer("Я принимаю только текстовые сообщения.")
 
 async def main() -> None:
     bot = Bot(
