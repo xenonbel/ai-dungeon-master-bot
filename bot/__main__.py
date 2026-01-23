@@ -1,11 +1,8 @@
 import asyncio
 import logging
-import os
 import sys
+
 import uvloop
-
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 from aiogram import Bot, Dispatcher, F
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -13,14 +10,15 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message
 from dotenv import load_dotenv
 from groq import AsyncGroq
+
+from bot.core.config import settings
 from bot.prompts import load_system_prompt
+
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-
-groq_client = AsyncGroq(api_key=GROQ_API_KEY)
+groq_client = AsyncGroq(api_key=settings.groq_api_key)
 
 SYSTEM_PROMPT = load_system_prompt()
 
@@ -38,7 +36,7 @@ async def generate_content(user_input: str) -> str:
         return chat_completion.choices[0].message.content
     except Exception as e:
         return f"{str(e)}"
-    
+
 async def main() -> None:
     dp = Dispatcher()
 
@@ -71,7 +69,7 @@ async def main() -> None:
 
 
     bot = Bot(
-        token=BOT_TOKEN,
+        token=settings.telegram_bot_token,
         default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
     )
     await dp.start_polling(
