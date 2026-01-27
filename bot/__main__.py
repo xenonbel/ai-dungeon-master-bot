@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import sys
+from collections import defaultdict
+from typing import Dict, List
 
 import uvloop
 from aiogram import Bot, Dispatcher, F
@@ -22,18 +24,30 @@ groq_client = AsyncGroq(api_key=settings.groq_api_key)
 
 SYSTEM_PROMPT = load_system_prompt()
 
-async def generate_content(user_input: str) -> str:
+history: Dict[int, List[Dict[str, str]]] = defaultdict(list)
+
+MAX_CONTEXT_MESSAGES = 40
+
+async def generate_content(chat_id: int, user_input: str) -> str:
+    context = history[chat_id][-MAX_CONTEXT_MESSAGES : ]
+    messages=[
+    {"role": "system", "content": SYSTEM_PROMPT}, *context,
+    {"role": "user", "content": user_input},
+    ]
+
     try:
         chat_completion = await groq_client.chat.completions.create(
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_input},
-            ],
+            messages=messages,
             model="llama-3.3-70b-versatile",
             temperature=0.7,
             max_tokens=1500,
         )
-        return chat_completion.choices[0].message.content
+        response = chat_completion.choices[0].message.content
+
+        history[chat_id].append({"role": "user", "content": user_input})
+        history[chat_id].append({"role": "assistant", "content": response})
+
+        return response
     except Exception as e:
         return f"{str(e)}"
 
@@ -45,14 +59,14 @@ async def main() -> None:
         await message.answer(
             "Привет! *Я AI Dungeon Master, твой помощник для ролевой игры Dungeons & Dragons.* \n\n"
             "Опиши, что нужно для игры: сгенерировать сюжет, персонажа, квест или диалог. \n\n"
-            "_Например: «Создай эльфа-мага с небольшой предисторией и распиши его характеристики»._",
-            parse_mode=ParseMode.MARKDOWN_V2
+            "_Например: «Создай эльфа-мага с небольшой предисторией и распиши его характеристики»._"
             )
 
     @dp.message(F.text)
     async def dnd_handler(message: Message) -> None:
         user_input = message.text
-        ai_response = await generate_content(user_input)
+        chat_id = message.chat.id
+        ai_response = await generate_content(chat_id, user_input)
         await message.answer(ai_response)
 
     @dp.message()
