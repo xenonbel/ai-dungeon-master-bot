@@ -1,7 +1,7 @@
 from aiogram import Router
+from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from aiogram.enums import ParseMode
 
 router = Router(name="start_handler")
 

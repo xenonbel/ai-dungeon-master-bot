@@ -1,9 +1,9 @@
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.types import Message
+from groq import AsyncGroq
 
 from bot.core.config import settings
 from bot.prompts import load_system_prompt
-from groq import AsyncGroq
 
 router = Router(name="content_handler")
 
@@ -25,7 +25,7 @@ async def generate_content(user_input: str) -> str:
         return chat_completion.choices[0].message.content
     except Exception as e:
         return f"{str(e)}"
-    
+
 @router.message(F.text)
 async def dnd_handler(message: Message) -> None:
     user_input = message.text
