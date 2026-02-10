@@ -1,8 +1,8 @@
 import os
 
 
-def load_system_prompt(**kwargs) -> str:
-    prompt_path = os.path.join(os.path.dirname(__file__), "system_prompt.md")
+def load_system_prompt(prompt_name: str) -> str:
+    file_path = os.path.join(os.path.dirname(__file__), f"{prompt_name}.md")
 
-    with open(prompt_path, encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         return f.read()
